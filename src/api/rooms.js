@@ -9,7 +9,7 @@ const database = require("../database/database")
 
 class Rooms extends UsersController {
 
-    getRoomMessages = asyncWrapper( async (req, res) => {
+    getRoom = asyncWrapper( async (req, res) => {
         const roomId = req.params.roomId
 
 
