@@ -17,10 +17,19 @@ class User extends UsersController {
     })
 
     getUsers = asyncWrapper( async (req, res) => {
-        const users = await db.query(` SELECT ${this.allowedFields} FROM users`)
+        const filter = {
+            username: req.query.username || "%",
+            limit: 25
+        }
+
+        const users = await db.query(`
+            SELECT ${this.allowedFields} FROM users
+            WHERE username ILIKE '%${filter.username}%'
+            LIMIT ${filter.limit}
+        `)
+
         res.status(200).json({users})
     })
-
     getUser = asyncWrapper( async (req, res) => {
         const userId = req.params.userId
         if(!userId) throw new BadRequestError("userId is required")
