@@ -20,7 +20,7 @@ CREATE TABLE messages (
     message_text VARCHAR(555) NOT NULL,
     sender_id UUID REFERENCES users(user_id) NOT NULL,
     room_id UUID REFERENCES rooms(room_id) NOT NULL,
-    created_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 CREATE TABLE notifications (
     notification_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

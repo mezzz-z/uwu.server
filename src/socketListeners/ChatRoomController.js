@@ -3,7 +3,7 @@ module.exports = function(socket){
     return {
         // send the created room for all (online) room members in real-time
         handleChatRoomCreated: (givenRoom) => {
-            let room = {...room, notificationsIds: []}
+            let room = {...givenRoom, notificationsIds: []}
             room.users_ids.forEach(id => {
                 const onlineUser = this.users.find(user => user.userId === id)
                 if(onlineUser){
