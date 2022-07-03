@@ -15,7 +15,8 @@ class IoListener {
     sendCurrentUserStatus = async (userId, status) => {
         // sending given user status to his (online) friends
         const user = await db.query(`UPDATE users SET status = '${status}' WHERE user_id = $1 RETURNING friends`, [userId])
-        const userFriends = await user[0].friends
+        const userFriends = user[0].friends || []
+        if(userFriends.length === 0) return
         const onlineFriends = this.users.filter(user => userFriends.includes(user.userId))
         onlineFriends.forEach(friend => {
             this.io.to(friend.socketId).emit('global/friend-status-changed', {userId, status})
