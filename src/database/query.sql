@@ -6,6 +6,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     profile_picture VARCHAR(255),
     friends UUID[],
+    status VARCHAR(50) NOT NULL DEFAULT 'offline',
     friend_requests UUID[]
 );
 CREATE TABLE rooms (
