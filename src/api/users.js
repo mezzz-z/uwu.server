@@ -1,10 +1,7 @@
-const jwt = require("jsonwebtoken")
 const db = require("../database/database")
 const UsersController = require("../controller/Users")
 const BadRequestError = require('../errors/BadRequestError')
-const UnauthorizedError = require('../errors/UnauthorizedError')
 const asyncWrapper = require('../helpers/async-wrapper')
-const bcrypt = require("bcrypt")
 
 
 class User extends UsersController {
@@ -15,7 +12,6 @@ class User extends UsersController {
         WHERE user_id = $1`, [req.user.userId])
         res.status(200).json({user: user[0]})
     })
-
     getUsers = asyncWrapper( async (req, res) => {
         const filter = {
             username: req.query.username || "%",
@@ -31,18 +27,20 @@ class User extends UsersController {
         res.status(200).json({users})
     })
     getUser = asyncWrapper( async (req, res) => {
-        const userId = req.params.userId
-        if(!userId) throw new BadRequestError("userId is required")
+        const allowedFields = ["username", "user_id"]
+        const {field, value} = req.params
+
+        if(!field || !value) throw new BadRequestError("Fields cannot be empty")
+        if(!allowedFields.includes(field)) throw new BadRequestError(`${field} is not allowed`)
 
         const user = await db.query(`
         SELECT ${this.allowedFields} FROM users
-        WHERE user_id = $1`, [userId])
+        WHERE ${field} = $1`, [value])
 
         if(user.length <= 0) throw new BadRequestError('User not found')
 
         res.status(200).json({user: user[0]})
     })
-
 }
 
 module.exports = new User()

@@ -10,6 +10,7 @@ class IoListener {
         // TODO: find a better solution
         this.VideoCallController = require('./VideoCallController.js')
         this.ChatRoomController = require('./ChatRoomController.js')
+        this.FriendsController = require('./FriendsController.js')
     }
 
     sendCurrentUserStatus = async (userId, status) => {
@@ -41,13 +42,13 @@ class IoListener {
                 socket.emit('global/user-id-submitted', submittedUser.userId)
             })
 
-            
+            // chat room
             const chatRoomController = this.ChatRoomController(socket)
             socket.on('chat-room/submit-current-room', chatRoomController.handleSubmitCurrentRoom)
             socket.on('chat-room/new-room-created', chatRoomController.handleChatRoomCreated)
             socket.on('chat-room/new-message', chatRoomController.handleNewMessage)
 
-
+            // video call
             const videoCallController = this.VideoCallController(socket)
             socket.on('video-call/send-invite', videoCallController.handleSendingInvite)
             socket.on('video-call/join-room', videoCallController.handleJoiningRoom)
@@ -55,6 +56,10 @@ class IoListener {
             socket.on('video-call/signal', videoCallController.handleSignaling)
             socket.on('video-call/leave-room', videoCallController.handleLeavingRoom)
 
+            // friends
+            const friendsController = this.FriendsController(socket)
+            socket.on('friends/send-friend-request-response', friendsController.handleIncomingFriendRequestResponse)
+            socket.on('friends/send-friend-request', friendsController.handleSendingFriendRequest)
 
 
             socket.on('disconnecting', () => {

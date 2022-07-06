@@ -10,6 +10,8 @@ class Friends extends UsersController {
     sendFriendRequest = asyncWrapper( async (req, res) => {
         const requestReceiverId = req.params.userId
         const currentUserId = req.user.userId
+
+        if(currentUserId === requestReceiverId) throw new BadRequestError('User not found')
         if(!requestReceiverId) throw new BadRequestError('Request receiver id is required')
 
         //! MAIN VALIDATION
@@ -113,7 +115,7 @@ class Friends extends UsersController {
         res.status(200).json({message: "the user deleted from your friend list successfully"})
     })
 
-    userFriends = asyncWrapper ( async (req, res) => {
+    getUserFriends = asyncWrapper ( async (req, res) => {
         const userId = req.user.userId
         let user = await db.query(`
             SELECT friends from users WHERE user_id = $1
@@ -127,6 +129,20 @@ class Friends extends UsersController {
             SELECT ${this.allowedFields} FROM users WHERE user_id = ANY ($1)
         `, [userFriendsIds])
         res.json({userFriends})
+    })
+
+    getUserFriendRequests = ( async (req, res) => {
+        const currentUserId = req.user.userId
+
+        const userFriendRequests = await db.query(`
+            SELECT ${this.allowedFields} FROM users
+            WHERE user_id = ANY(CAST ((
+                SELECT friend_requests FROM users
+                WHERE user_id = $1
+            ) AS UUID[]))
+        `, [currentUserId])
+
+        res.json({friendRequests: userFriendRequests})
     })
 }
 
