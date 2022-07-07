@@ -39,6 +39,7 @@ module.exports = function(socket){
             }
         
             const inviteSender = this.users.find(user => user.socketId === socket.id)
+            if(!inviteSender) return
         
             this.videoCallRooms.push({
                 invitationCode,
