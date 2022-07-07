@@ -1,17 +1,17 @@
-const jwt = require("jsonwebtoken")
 const db = require("../database/database")
 const UsersController = require("../controller/Users")
 const BadRequestError = require('../errors/BadRequestError')
 const UnauthorizedError = require('../errors/UnauthorizedError')
 const asyncWrapper = require('../helpers/async-wrapper')
-const bcrypt = require("bcrypt")
-const database = require("../database/database")
 
 class Rooms extends UsersController {
 
-    getRoom = asyncWrapper( async (req, res) => {
+    getRoomAndRoomMessages = asyncWrapper( async (req, res) => {
         const roomId = req.params.roomId
-
+        const filter = {
+            limit: 45,
+            offset: require.query.offset || 0
+        }
 
         if(!roomId) throw new BadRequestError("roomId is required")
 
@@ -23,7 +23,7 @@ class Rooms extends UsersController {
             FROM rooms
             LEFT JOIN messages ON messages.room_id = rooms.room_id
             LEFT JOIN users ON messages.sender_id = users.user_id
-            WHERE rooms.room_id = $1
+            WHERE rooms.room_id = $1 OFFSET ${filter.offset} LIMIT ${filter.limit}
         `, [roomId])
 
 
@@ -66,6 +66,7 @@ class Rooms extends UsersController {
         if(createdRoom.length <= 0 ) throw new BadRequestError("cannot create the room")
         res.status(201).json({createdRoom: createdRoom[0], message: 'Room created successfully'})
     })
+
 
     getRooms = asyncWrapper( async (req, res) => {
         const userId = req.user.userId
