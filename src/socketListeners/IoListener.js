@@ -58,7 +58,7 @@ class IoListener {
 
             // friends
             const friendsController = this.FriendsController(socket)
-            socket.on('friends/send-friend-request-response', friendsController.handleIncomingFriendRequestResponse)
+            socket.on('friends/send-friend-request-answer', friendsController.handleIncomingFriendRequestAnswer)
             socket.on('friends/send-friend-request', friendsController.handleSendingFriendRequest)
 
 
@@ -80,7 +80,7 @@ class IoListener {
                 }
 
                 this.users = this.users.filter(submittedUser => submittedUser.userId !== user.userId)
-                this.sendCurrentUserStatus(user.userId)
+                this.sendCurrentUserStatus(user.userId, 'offline')
             })
         })
     }

@@ -47,45 +47,46 @@ class Friends extends UsersController {
 
     })
 
-    friendRequestResponse = asyncWrapper( async (req, res) => {
-        const requestSenderId = req.params.userId
+    friendRequestAnswer = asyncWrapper( async (req, res) => {
+        const answerReceiverId = req.params.userId
         const currentUserId = req.user.userId
         const accepted = req.body.accepted
-        if(!accepted) throw new BadRequestError('answer is required')
-        if(!requestSenderId) throw new BadRequestError('request sender id is required')
+        if(typeof accepted === 'undefined' || accepted === null) throw new BadRequestError('answer is required')
+        if(!answerReceiverId) throw new BadRequestError('answer sender id is required')
 
         //! MAIN VALIDATION
         const friendRequests = await db.query(`
             select friend_requests from users
             WHERE user_id = $1
-            AND $2 = ANY(friend_requests);
-        `, [currentUserId, requestSenderId])
+            AND $2 = ANY(friend_requests)
+        `, [currentUserId, answerReceiverId])
 
-        if(!friendRequests.length > 0) throw new BadRequestError('friend request does not exists')
+        if(!friendRequests.length > 0) throw new BadRequestError('friend request is not available')
 
 
         await db.query(`
             UPDATE users SET friend_requests = array_remove(friend_requests, $1)
             WHERE user_id = $2
-        `, [requestSenderId, currentUserId])
+        `, [answerReceiverId, currentUserId])
+
         
         if(accepted){
-            const user1 = await db.query(`
+            const answerReceiver = await db.query(`
                 UPDATE users SET friends = array_append(friends, $1)
-                WHERE user_id = $2 RETURNING friends`, [currentUserId, requestSenderId])
-            const user2 = await db.query(`
+                WHERE user_id = $2 RETURNING ${this.allowedFields} `, [currentUserId, answerReceiverId])
+            const answerSender = await db.query(`
                 UPDATE users SET friends = array_append(friends, $1)
-                WHERE user_id = $2 RETURNING friends`, [requestSenderId, currentUserId])
+                WHERE user_id = $2 RETURNING ${this.allowedFields}`, [answerReceiverId, currentUserId])
 
-            console.log(user1)
-            console.log(user2)
+            return res.status(200).json({
+                message: `Friend request accepted`,
+                answerReceiver: answerReceiver[0],
+                answerSender: answerSender[0],
+                accepted: true
+            })
         }
 
-        const friendRequestCallbackStatus = accepted ? 'Accepted' : 'Rejected'
-
-        res.status(200).json({
-            message: `friend request ${friendRequestCallbackStatus}`,
-        })
+        res.status(200).json({message: "Friend request rejected", accepted: false})
     })
 
 

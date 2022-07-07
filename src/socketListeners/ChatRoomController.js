@@ -15,6 +15,7 @@ module.exports = function(socket){
         // create and submit the given room
         handleSubmitCurrentRoom: async ({room, userId, lastRoomId}) => {
             const userIndex = this.users.findIndex(user => user.userId === userId)
+            if(userIndex === -1) return
             // join user to the room (leave the last room if last room exists)
             if(lastRoomId){socket.leave(lastRoomId)}
             socket.join(room.roomId);
