@@ -32,7 +32,7 @@ class Rooms extends UsersController {
             SELECT messages.message_id, messages.message_text, messages.sender_id, messages.created_at,
             users.username, users.profile_picture FROM
             messages LEFT JOIN users ON messages.sender_id = users.user_id
-            WHERE messages.room_id = $1 ORDER BY created_at OFFSET ${filter.offset} LIMIT ${filter.limit}
+            WHERE messages.room_id = $1 ORDER BY created_at DESC OFFSET ${filter.offset} LIMIT ${filter.limit}
         `, [roomId])
         
         const messages = data.length === 0  ? [] : data.map(message => {
