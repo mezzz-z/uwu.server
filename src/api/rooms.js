@@ -1,9 +1,7 @@
 const db = require("../database/database")
 const UsersController = require("../controller/Users")
 const BadRequestError = require('../errors/BadRequestError')
-const UnauthorizedError = require('../errors/UnauthorizedError')
 const asyncWrapper = require('../helpers/async-wrapper')
-const { request } = require("http")
 
 class Rooms extends UsersController {
 
@@ -24,10 +22,16 @@ class Rooms extends UsersController {
         if(!roomId) throw new BadRequestError("roomId is required")
 
         const filter = {
-            offset: req.query.offset || 0,
+            offset: parseInt(req.query?.offset) || 0,
             limit: 25
         }
+
+        const messagesCountData = await db.query(`SELECT COUNT(*) FROM messages WHERE room_id = $1`, [roomId])
+        const messagesCount = messagesCountData[0]?.count
         
+        if(messagesCount === 0) return res.status(200).json({ messages: [], isFinished: true })
+        
+
         let data = await db.query(`
             SELECT messages.message_id, messages.message_text, messages.sender_id, messages.created_at,
             users.username, users.profile_picture FROM
@@ -47,8 +51,12 @@ class Rooms extends UsersController {
                 }
             }
         })
-        
-        res.status(200).json({messages})
+
+        res.status(200).json({
+            messages,
+            isFinished: 
+                messagesCount > (filter.offset + messages.length) ? false : true
+        })
     })
 
     createRoom = asyncWrapper( async (req, res) => {
