@@ -83,7 +83,7 @@ class Rooms extends UsersController {
 
         const rooms = await db.query(`
             SELECT
-            rooms.room_id, rooms.room_name, notifications.notification_id
+            rooms.room_id, rooms.room_name, rooms.users_ids, notifications.notification_id
             FROM
             rooms LEFT JOIN notifications ON (
                 rooms.room_id = notifications.room_id AND
@@ -103,6 +103,7 @@ class Rooms extends UsersController {
             modifiedRooms.push({
                 room_name: room.room_name,
                 room_id: room.room_id,
+                users_ids: room.users_ids,
                 notificationsIds: room.notification_id ? [room.notification_id] : []
             })
         })
