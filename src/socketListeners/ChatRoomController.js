@@ -1,4 +1,7 @@
 const db = require('../database/database.js')
+const api = require('axios').default.create({baseURL: 'http://localhost:8080/api/v1/'})
+
+
 module.exports = function(socket){
     return {
         // send the created room for all (online) room members in real-time
@@ -11,7 +14,6 @@ module.exports = function(socket){
                 }
             })
         },
-
         // create and submit the given room
         handleSubmitCurrentRoom: async ({room, userId, lastRoomId}) => {
             const userIndex = this.users.findIndex(user => user.userId === userId)
@@ -32,8 +34,6 @@ module.exports = function(socket){
             socket.emit('chat-room/current-room-submitted', user.currentRoom)
             this.io.to(room.roomId).emit('chat-room/new-member-joined', user.userId)
         },
-
-
         handleNewMessage: async ({roomId, messageText, senderId}) => {
             const user = this.users.find(user => socket.id === user.socketId)
             if(!user || !user.currentRoom) return
@@ -95,6 +95,23 @@ module.exports = function(socket){
                     roomId: roomId
                 })
             });
+        },
+
+        joinNewUser: async ({userId, roomId, accessToken}) => {
+            try {
+                const {data} = await api.post(
+                    `/rooms/${roomId}/addNewUser/${userId}`, {},
+                    {headers: {'authorization': 'Bearer ' + accessToken}})
+
+                socket.emit('chat-room/new-user-added', {success: true, message: data.message})
+
+            } catch (error) {
+                socket.emit('chat-room/new-user-added', {
+                    success: false, message: error.response?.data?.message || 'something went wrong'
+                })
+            }
+
+            // send notification in real-time COMING SOON
         }
     }
 }

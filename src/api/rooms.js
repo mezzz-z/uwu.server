@@ -111,6 +111,28 @@ class Rooms extends UsersController {
 
         res.status(200).json({rooms: modifiedRooms})
     })
+
+
+    addNewUser = asyncWrapper( async (req, res) => {
+        const userId = req.params.userId
+        const roomId = req.params.roomId
+        if(!roomId || !userId) throw new BadRequestError("parameters are required")
+
+        const isAlreadyJoinedData = await db.query(`
+            SELECT room_id FROM rooms
+            WHERE room_id = $1 AND $2 = ANY(users_ids)
+        `, [roomId, userId])
+        if(isAlreadyJoinedData.length > 0) throw new BadRequestError('you cant add the user twice')
+
+        
+        await db.query(`
+            UPDATE rooms SET users_ids = ARRAY_APPEND(users_ids, $1)
+            WHERE room_id = $2
+        `, [userId, roomId])
+
+        res.status(200).json({message: 'user joined successfully'})
+    })
+    
 }
 
 module.exports = new Rooms()
