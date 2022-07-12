@@ -5,7 +5,7 @@ UWU server-side
 UWU is very small application that you can use it to communicating with you friends
 
 
-### **futures**
+### **features**
 - Video Calling / using web rtc and peer to peer communication
 - Chatting / using web-socket
 - coming soon...
