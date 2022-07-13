@@ -116,7 +116,7 @@ module.exports = function(socket){
             try {
                 await db.query('DELETE FROM notifications WHERE message_id = $1', [messageId])
                 const deletedMessageData = await db.query(`DELETE FROM messages WHERE message_id = $1 RETURNING message_id`, [messageId])
-                
+
                 if(deletedMessageData.length === 0) return
 
                 
@@ -124,6 +124,19 @@ module.exports = function(socket){
 
             } catch (error) {
                 return console.log(error)
+            }
+        },
+
+        editMessage: async ({newMessageText, messageId, roomId}) => {
+            try {
+                const editedMessageData = await db.query(`
+                    UPDATE messages SET message_text = $1 WHERE message_id = $2
+                    RETURNING *`, [newMessageText, messageId])
+
+                this.io.to(roomId).emit('chat-room/message-edited', (editedMessageData[0]))
+                
+            } catch (error) {
+                console.log(error)
             }
         }
     }

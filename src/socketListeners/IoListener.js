@@ -5,6 +5,7 @@ class IoListener {
         this.io = io
         this.users = []
         this.videoCallRooms = []
+        this.usersIntervals = []
 
 
         // TODO: find a better solution
@@ -13,8 +14,7 @@ class IoListener {
         this.FriendsController = require('./FriendsController.js')
     }
 
-    sendCurrentUserStatus = async (userId, status) => {
-        // sending given user status to his (online) friends
+    updateAndSendUserStatus = async (userId, status) => {
         const user = await db.query(`UPDATE users SET status = '${status}' WHERE user_id = $1 RETURNING friends`, [userId])
         const userFriends = user[0].friends || []
         if(userFriends.length === 0) return
@@ -24,20 +24,22 @@ class IoListener {
         });
     }
     
-
-
     startListening(){
          this.io.on('connect', (socket) => {
             // user joined
             // submitting the user
             socket.on('global/submit-user-id', async (userId) => {
+
+                this.availableVideoCallRooms = []
+
                 this.users.push({
                     userId: userId,
                     socketId: socket.id,
                     currentRoom: null
                 })
-                this.availableVideoCallRooms = []                
-                await this.sendCurrentUserStatus(userId, 'online')
+
+                await this.updateAndSendUserStatus(userId, 'online')
+
                 const submittedUser = this.users.find(user => user.userId === userId)
                 socket.emit('global/user-id-submitted', submittedUser.userId)
             })
@@ -49,6 +51,7 @@ class IoListener {
             socket.on('chat-room/new-message', chatRoomController.handleNewMessage)
             socket.on('chat-room/add-new-user', chatRoomController.joinNewUser)
             socket.on('chat-room/delete-message', chatRoomController.deleteMessage)
+            socket.on('chat-room/edit-message', chatRoomController.editMessage)
 
             // video call
             const videoCallController = this.VideoCallController(socket)
@@ -82,7 +85,7 @@ class IoListener {
                 }
 
                 this.users = this.users.filter(submittedUser => submittedUser.userId !== user.userId)
-                this.sendCurrentUserStatus(user.userId, 'offline')
+                this.updateAndSendUserStatus(user.userId, 'offline')
             })
         })
     }
