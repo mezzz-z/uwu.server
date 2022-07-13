@@ -96,7 +96,6 @@ module.exports = function(socket){
                 })
             });
         },
-
         joinNewUser: async ({userId, roomId, accessToken}) => {
             try {
                 const {data} = await api.post(
@@ -112,6 +111,20 @@ module.exports = function(socket){
             }
 
             // send notification in real-time COMING SOON
+        },
+        deleteMessage: async ({roomId, messageId}) => {
+            try {
+                await db.query('DELETE FROM notifications WHERE message_id = $1', [messageId])
+                const deletedMessageData = await db.query(`DELETE FROM messages WHERE message_id = $1 RETURNING message_id`, [messageId])
+                
+                if(deletedMessageData.length === 0) return
+
+                
+                this.io.to(roomId).emit('chat-room/message-deleted', deletedMessageData[0].message_id)
+
+            } catch (error) {
+                return console.log(error)
+            }
         }
     }
 }

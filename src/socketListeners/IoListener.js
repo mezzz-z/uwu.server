@@ -48,6 +48,7 @@ class IoListener {
             socket.on('chat-room/new-room-created', chatRoomController.handleChatRoomCreated)
             socket.on('chat-room/new-message', chatRoomController.handleNewMessage)
             socket.on('chat-room/add-new-user', chatRoomController.joinNewUser)
+            socket.on('chat-room/delete-message', chatRoomController.deleteMessage)
 
             // video call
             const videoCallController = this.VideoCallController(socket)
