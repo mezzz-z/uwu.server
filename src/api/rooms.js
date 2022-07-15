@@ -137,12 +137,12 @@ class Rooms extends UsersController {
         if(isAlreadyJoinedData.length > 0) throw new BadRequestError('you cant add the user twice')
 
         
-        await db.query(`
+        const targetRoomData = await db.query(`
             UPDATE rooms SET users_ids = ARRAY_APPEND(users_ids, $1)
-            WHERE room_id = $2
+            WHERE room_id = $2 RETURNING *
         `, [userId, roomId])
 
-        res.status(200).json({message: 'user joined successfully'})
+        res.status(200).json({message: 'user joined successfully', targetRoom: targetRoomData[0]})
     })
     
 }

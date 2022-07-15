@@ -44,6 +44,8 @@ class IoListener {
                 socket.emit('global/user-id-submitted', submittedUser.userId)
             })
 
+
+
             // chat room
             const chatRoomController = this.ChatRoomController(socket)
             socket.on('chat-room/submit-current-room', chatRoomController.handleSubmitCurrentRoom)

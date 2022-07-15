@@ -1,18 +1,32 @@
 const db = require('../database/database.js')
 const api = require('axios').default.create({baseURL: 'http://localhost:8080/api/v1/'})
 
+const sendGivenRoomToTargetUser = (givenRoom, targetUser, io) => {
+
+    let room = {...givenRoom, notificationsIds: []}
+
+    if(typeof targetUser !== 'object') return
+    const isTargetUserArray = Array.isArray(targetUser)
+
+    if(!isTargetUserArray) {
+        return io.to(targetUser.socketId).emit('chat-room/new-room-created', room)
+    }
+
+    targetUser.forEach(user => {
+        io.to(user.socketId).emit('chat-room/new-room-created', room)
+    })
+}
 
 module.exports = function(socket){
     return {
         // send the created room for all (online) room members in real-time
-        handleChatRoomCreated: (givenRoom) => {
-            let room = {...givenRoom, notificationsIds: []}
-            room.users_ids.forEach(id => {
-                const onlineUser = this.users.find(user => user.userId === id)
-                if(onlineUser){
-                    this.io.to(onlineUser.socketId).emit('chat-room/new-room-created', room)
-                }
+        handleChatRoomCreated: (room) => {
+            const roomOnlineMembers = room.users_ids.map(id => {
+                const onlineUser = this.users.find(user => user.userId === id);
+                if(!onlineUser) return
+                return onlineUser
             })
+            sendGivenRoomToTargetUser(room, roomOnlineMembers, this.io)
         },
         // create and submit the given room
         handleSubmitCurrentRoom: async ({room, userId, lastRoomId}) => {
@@ -98,11 +112,16 @@ module.exports = function(socket){
         },
         joinNewUser: async ({userId, roomId, accessToken}) => {
             try {
-                const {data} = await api.post(
+                const { data } = await api.post(
                     `/rooms/${roomId}/addNewUser/${userId}`, {},
                     {headers: {'authorization': 'Bearer ' + accessToken}})
 
                 socket.emit('chat-room/new-user-added', {success: true, message: data.message})
+
+                const user = this.users.find(user => user.userId === userId)
+                if(!user) return
+                
+                sendGivenRoomToTargetUser(data.targetRoom, user, this.io)
 
             } catch (error) {
                 socket.emit('chat-room/new-user-added', {
