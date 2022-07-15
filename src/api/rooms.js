@@ -59,6 +59,18 @@ class Rooms extends UsersController {
         })
     })
 
+    getRoomMembers = asyncWrapper( async (req, res) => {
+        const {roomId} = req.params
+        if(!roomId) throw new BadRequestError('roomId is required')
+
+        const roomMembersData = await db.query(`
+            SELECT ${this.allowedFields} FROM users
+            WHERE user_id = ANY( CAST((SELECT users_ids FROM rooms WHERE room_id = $1) AS uuid[]))
+        `, [roomId])
+
+        res.status(200).json({members: roomMembersData})
+    })
+
     createRoom = asyncWrapper( async (req, res) => {
         const currentUserId = req.user.userId
         const { usersIds, roomName } = req.body

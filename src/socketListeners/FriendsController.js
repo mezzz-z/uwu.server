@@ -31,7 +31,7 @@ module.exports = function(socket){
                 // bcs we will add the data as a new friend to answerReceiver's friends
                 const answerReceiverSocketData = this.users.find(user => user.userId === answerReceiver.user_id)
                 if(!answerReceiverSocketData) return
-                socket.to(answerReceiverSocketData).emit('friends/incoming-friend-request-answer', {
+                this.io.to(answerReceiverSocketData.socketId).emit('friends/incoming-friend-request-answer', {
                     accepted: data.accepted,
                     answerSender
                 })
