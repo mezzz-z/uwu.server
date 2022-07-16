@@ -38,6 +38,25 @@ class IoListener {
                     currentRoom: null
                 })
 
+                this.usersIntervals.push({
+                    userId: userId,
+                    interval: setInterval( async () => {
+                        const user = this.users.find(user => user.userId === userId)
+                        const userInterval = this.usersIntervals.find(userInterval => userInterval.userId === userId)
+                        if(!user) return clearInterval(userInterval.interval)
+
+                        const sockets = await (await this.io.fetchSockets()).map(socket => socket.id)
+                        const isUserOnline = sockets.includes(user.socketId)
+                        if(isUserOnline) return
+
+                        await this.updateAndSendUserStatus(userId, 'offline')
+                        clearInterval(userInterval.interval)
+                        this.users = this.users.filter(user => user.userId !== userId)
+                        this.usersIntervals = this.usersIntervals.filter(userInterval => userInterval.userId !== userId)
+
+                    }, 1000 * 60 * 20)
+                })
+
                 await this.updateAndSendUserStatus(userId, 'online')
 
                 const submittedUser = this.users.find(user => user.userId === userId)
@@ -73,10 +92,13 @@ class IoListener {
                 const user = this.users.find(user => user.socketId === socket.id)
                 if(!user) return
 
-                // if user disconnected from a video call find that videoCall info
+                const {interval} = this.usersIntervals.find(userInterval => userInterval.userId === user.userId)
+                clearInterval(interval)
+                this.usersIntervals = this.usersIntervals.filter(userInterval => userInterval.userId !== user.userId)
+
                 const userVideoCallRoom = this.videoCallRooms.find(
                     room => room.membersSocketsIds.includes(user.socketId))    
-                // remove video call and emit a message that peer disconnected
+
                 if(userVideoCallRoom){
                     socket
                     .to(userVideoCallRoom.invitationCode)
