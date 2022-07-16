@@ -86,6 +86,7 @@ class IoListener {
             const friendsController = this.FriendsController(socket)
             socket.on('friends/send-friend-request-answer', friendsController.handleIncomingFriendRequestAnswer)
             socket.on('friends/send-friend-request', friendsController.handleSendingFriendRequest)
+            socket.on('friends/remove-friend', friendsController.removeFriend)
 
 
             socket.on('disconnecting', () => {
