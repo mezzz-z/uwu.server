@@ -67,6 +67,23 @@ class User extends UsersController {
 			updatedProfilePicture: updatedProfilePictureData[0].profile_picture,
 		});
 	};
+
+	updateUserProfile = async (req, res) => {
+		const currentUserId = req.user.userId;
+		const { username, bio } = req.body;
+		if (!username || !bio) throw new BadRequestError("Fields cannot be empty");
+
+		const updatedProfileData = await db.query(
+			`UPDATE users SET username = $1, bio = $2
+			WHERE user_id = $3 RETURNING username, bio`,
+			[username, bio, currentUserId]
+		);
+
+		res.status(200).json({
+			updatedProfile: updatedProfileData[0],
+			message: "Profile updated",
+		});
+	};
 }
 
 module.exports = new User();

@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const db = require("../database/database");
 
 module.exports = class UsersController {
-	allowedFields = "user_id, username, email, profile_picture, status";
+	allowedFields = "user_id, username, email, profile_picture, status, bio";
 	acceptMimeTypes = ["image/jpeg", "image/png"];
 
 	async getUserByFilter(filter) {

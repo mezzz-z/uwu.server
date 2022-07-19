@@ -50,6 +50,7 @@ class IoListener {
 						const userInterval = this.usersIntervals.find(
 							userInterval => userInterval.userId === userId
 						);
+						if (!userInterval) return;
 						if (!user) return clearInterval(userInterval.interval);
 
 						const sockets = await (
